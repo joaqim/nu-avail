@@ -1,0 +1,9 @@
+{
+	name: nu-avail
+	type: custom
+	version: "0.1.0"
+	script: install.nu
+	dependencies: {
+		nushell: 0.90.1
+	}
+}

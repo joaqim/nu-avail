@@ -4,46 +4,42 @@ use ../resources_param_config.nu *
 use std log
 
 export def recurse [$conf_key: string, $context: string, --conf: any] {
-    let $params = ($context | split row --regex \s+)
+    let $params = ($context | str replace --regex '\s--' ' ' | split row --regex \s+)
 
     let $resources_name = $params.1?
 
-    log info ([$conf_key $resources_name, $context] | to nuon)
-    
 
-    let $last_param = (
-        if (($params | last ) =~ '^--') {
-            ($params | last | split words | str join '-') 
-        } else {
-            ($params | last)
-        }
-    )
+    let $last_param = ($params | last )
+
+    log info ([$conf_key $resources_name, $context, $last_param] | to nuon)
+
     let $resources_conf = (($conf | default $resources_param_config) | get -i $conf_key)
 
-
-    if  not ($resources_name | is-empty) and not ($resources_conf | is-empty) {
-        if ($params.1? in ($resources_conf | columns)) {
-            return (recurse $params.1  ($params | skip 1 | str join ' ') --conf ( $resources_conf))
+    if not ($resources_name | is-empty) and (not ($resources_conf | is-empty)) {
+        if ($resources_name in $resources_conf) {
+            return (recurse $resources_name ($params | skip 1 | str join ' ') --conf $resources_conf)
         }
     }
 
-    mut $completions = []
+    mut $completions = (
+        match ($resources_conf | describe) {
+            'list<string>' => ($resources_conf)
+            'nothing' => ($resources_param_config | columns)
+            _ => ($resources_conf | columns)
+        }
+    )
 
-    if ($resources_conf | is-empty) {
-        $completions = ($resources_param_config | columns)
-    } else if (($resources_conf | describe) == 'list<string>') {
-        $completions = ($resources_conf)
-    } else {
-        $completions = ($resources_conf | columns)
+    log info ($completions | to nuon)
+
+    if ('completion' in $completions) {
+        $completions = ($resources_conf.completion | default [])
     }
 
-    if ($last_param == $conf_key) {
+    if ($last_param | is-empty) or ($last_param == $conf_key) {
         return ($completions | filter { $in != 'all'})
-        #recurse $resources_name $context --conf $resources_conf
-    }   
+    }
 
-    return ($completions | filter { $in =~ $last_param})
-    #return ($completions)
+    return ($completions | filter { $in =~ $last_param })
 }
 
 export def available [$arg_type: string, $context: string] {
@@ -53,7 +49,7 @@ export def available [$arg_type: string, $context: string] {
     let $resources_name = $params.1
     let $last_param = (
         if (($params | last ) =~ '^--') {
-            ($params | last | split words | str join '-') 
+            ($params | last | split words | str join '-')
         } else {
             ($params | last)
         }
@@ -96,7 +92,7 @@ export def available [$arg_type: string, $context: string] {
 
     #if (($completions | describe) == 'list<string>') {
     return ($completions | filter { $in =~ $last_param})
-    
+
 
     #return ($resource_conf | get -i $arg_type | reject -i all | columns | filter { $in =~ $last_param})
 }

@@ -8,11 +8,11 @@ export const resources_param_config = {
                 put: {
                     update: {
                         required: [id, body]
-                    }, 
+                    },
                     create: {
                         required: [body]
                         }
-                }, 
+                },
                 post: {
                     create: {
                         required: [body],
@@ -22,18 +22,24 @@ export const resources_param_config = {
                 get: {
                     mutually_exclusive: [body]
                 }
-            }, 
+            },
             args: {
                 all: {
                     mutually_exclusive: {
                         actions: [put, post]
                     }
-                }, 
-                from_date: {
+                },
+                from-date: {
                     completion: [now]
                     mutually_exclusive: [from, date]
-                }, 
-                to_date: {
+                },
+                to-date: {
+                    expects: {
+                        any_one: [from, date, for-year, for-quarter, for-month, for-day]
+                    }
+                }
+                from: {
+                    completion: ['12 days ago', '1 month ago', '1 year ago']
                     expects: {
                         any_one: [from, date, for-year, for-quarter, for-month, for-day]
                     }
@@ -41,7 +47,13 @@ export const resources_param_config = {
                 raw: {
                     mutually_exclusive: [brief, obfuscate]
                 }
-            }, 
+                brief: {
+                    mutually_exclusive: [obfuscate, raw]
+                }
+                obfuscate: {
+                    mutually_exclusive: [brief, raw]
+                }
+            },
             filter: [unbooked, cancelled, fullypaid, unpaid, unpaidoverdue]
             sort-by: [ascending descending]
         }
